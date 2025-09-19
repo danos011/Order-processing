@@ -97,6 +97,34 @@ docker compose -f docker-compose-dev.yml up -d –build
 
 ---
 
+## Создание топиков в Kafka
+
+Для работы всех сервисов предварительно создайте необходимые топики в Kafka. После запуска контейнеров с брокером сообщений выполните следующие команды:
+
+1. **Зайдите в контейнер с Kafka:**
+```
+docker exec -it kafka1 bash
+```
+
+2. **Создайте топики:**
+
+- *orders*  
+  ```
+  kafka-topics --create --topic orders --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server localhost:9092
+  ```
+
+- *notifications*  
+  ```
+  kafka-topics --create --topic notifications --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server localhost:9092
+  ```
+
+- (Добавьте другие топики по аналогии, если нужно.)
+
+3. **Проверьте, что топики созданы:**
+```
+kafka-topics –list –bootstrap-server localhost:9092
+```
+
 **Примечания:**
 - Убедитесь, что все переменные окружения прописаны в `.env` для корректной работы сервисов.
 - Для работы Kafka убедитесь, что брокер сообщений доступен по адресу, указанному в переменных.
