@@ -1,6 +1,4 @@
 from confluent_kafka import Consumer, Producer
-import json
-import logging
 from dotenv import load_dotenv
 
 import json
@@ -20,7 +18,7 @@ consumer = Consumer({
     'group.id': KAFKA_GROUP_ID,
     'auto.offset.reset': KAFKA_AUTO_OFFSET_RESET
 })
-producer = Producer({'bootstrap.servers': 'localhost:9092'})
+producer = Producer({'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS})
 
 consumer.subscribe(['orders'])
 

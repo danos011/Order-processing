@@ -8,11 +8,11 @@ import os
 
 load_dotenv()
 
-BOOTSTRAP_SERVERS = os.getenv('BOOTSTRAP_SERVERS')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
 
 app = FastAPI()
 
-producer = Producer({'bootstrap.servers': BOOTSTRAP_SERVERS})
+producer = Producer({'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS})
 
 def delivery_report(err, msg):
     if err:

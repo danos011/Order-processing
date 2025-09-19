@@ -1,0 +1,78 @@
+version: '3.6'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.3.2
+    hostname: kafka1
+    container_name: kafka1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  create_topics:
+    image: confluentinc/cp-kafka:7.3.2
+    depends_on:
+      - kafka1
+    entrypoint:
+      [
+        "sh", "-c",
+        "cub kafka-ready -b kafka1:9092 1 20 && \
+        kafka-topics --create --topic orders --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka1:9092 && \
+        kafka-topics --create --topic notifications --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka1:9092"
+      ]
+    restart: 'no'
+
+
+  order_service:
+    build:
+      context: ./order_service
+      dockerfile: Dockerfile-order
+    ports:
+      - "8000:8000"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
+    depends_on:
+      - kafka1
+
+  processing_service:
+    build:
+      context: ./processing_service
+      dockerfile: Dockerfile-processing
+    ports:
+      - "8003:8003"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
+      KAFKA_GROUP_ID: processing-group
+      KAFKA_AUTO_OFFSET_RESET: earliest
+    depends_on:
+      - kafka1
+
+  notification_service:
+    build:
+      context: ./notification_service
+      dockerfile: Dockerfile-notification
+    ports:
+      - "8002:8002"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
+      KAFKA_GROUP_ID: notification-group
+      KAFKA_AUTO_OFFSET_RESET: earliest
+    depends_on:
+      - kafka1
