@@ -2,11 +2,13 @@ from confluent_kafka import Consumer
 from dotenv import load_dotenv
 
 import os
-import logging
+import logging.config
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
+logging.config.fileConfig('logging.conf')
+
+logger = logging.getLogger('notification_service')
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
 KAFKA_GROUP_ID = os.getenv('KAFKA_GROUP_ID')
@@ -20,15 +22,18 @@ consumer = Consumer({
 
 consumer.subscribe(['notifications'])
 
+logger.info('Сервис запущен и готов к обработке сообщений')
+
 try:
     while True:
         msg = consumer.poll(timeout=1.0)
         if msg is None:
             continue
         if msg.error():
-            logging.error(msg.error())
+            logger.error(msg.error())
+            print(msg.error())
             continue
 
-        logging.info(f'Notification received: {msg.value().decode("utf-8")}')
+        logger.info(f'Notification received: {msg.value().decode("utf-8")}')
 finally:
     consumer.close()

@@ -1,0 +1,24 @@
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    paths:
+      - /logs/order_service/*.log
+    fields:
+      service: order_service
+
+  - type: filestream
+    enabled: true
+    paths:
+      - /logs/processing_service/*.log
+    fields:
+      service: processing_service
+
+  - type: filestream
+    enabled: true
+    paths:
+      - /logs/notification_service/*.log
+    fields:
+      service: notification_service
+
+output.logstash:
+  hosts: [ "logstash:5044" ]

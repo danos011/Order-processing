@@ -57,6 +57,8 @@ services:
     build:
       context: ./order_service
       dockerfile: Dockerfile-order
+    volumes:
+      - ./docker_volumes/order_service:/logs
     ports:
       - "8000:8000"
     environment:
@@ -68,6 +70,8 @@ services:
     build:
       context: ./processing_service
       dockerfile: Dockerfile-processing
+    volumes:
+      - ./docker_volumes/processing_service:/logs
     ports:
       - "8003:8003"
     environment:
@@ -81,6 +85,8 @@ services:
     build:
       context: ./notification_service
       dockerfile: Dockerfile-notification
+    volumes:
+      - ./docker_volumes/notification_service:/logs
     ports:
       - "8002:8002"
     environment:
@@ -94,7 +100,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.4-arm64
     volumes:
       - ./configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-      - ./docker_volumes/elasticsearch//usr/share/elasticsearch/data
+      - ./docker_volumes/elasticsearch:/usr/share/elasticsearch/data
     environment:
       ES_JAVA_OPTS: "-Xmx512m -Xms512m"
       ELASTIC_USERNAME: "elastic"
@@ -110,11 +116,13 @@ services:
     image: docker.elastic.co/logstash/logstash:9.1.4-arm64
     volumes:
       - ./configs/logstash/config.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./configs/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./configs/logstash/pipelines:/usr/share/logstash/config/pipelines:ro
     environment:
       LS_JAVA_OPTS: "-Xmx512m -Xms512m"
     ports:
       - "5044:5044"
-      - "5000:5000"
+      - "5001:5000"
       - "9600:9600"
     networks:
       - elk
@@ -131,6 +139,21 @@ services:
       - elk
     ports:
       - "5601:5601"
+
+  beats:
+    image: docker.elastic.co/beats/filebeat-oss:9.1.4-arm64
+    volumes:
+      - ./configs/filebeat/config.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./docker_volumes/order_service:/logs/order_service:ro
+      - ./docker_volumes/processing_service:/logs/processing_service:ro
+      - ./docker_volumes/notification_service:/logs/notification_service:ro
+    networks:
+      - elk
+    depends_on:
+      - order_service
+      - processing_service
+      - notification_service
+      - elasticsearch
 
 networks:
   elk:

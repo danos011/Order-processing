@@ -3,7 +3,7 @@ from confluent_kafka import Producer
 from dotenv import load_dotenv
 
 import json
-import logging
+import logging.config
 import os
 
 load_dotenv()
@@ -12,13 +12,22 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
 
 app = FastAPI()
 
+logging.config.fileConfig('logging.conf')
+
+logger = logging.getLogger('order_service')
+
 producer = Producer({'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS})
+
 
 def delivery_report(err, msg):
     if err:
-        logging.error(f'Message delivery failed: {err}')
+        logger.error(f'Message delivery failed: {err}')
     else:
-        logging.info(f'Message delivered to {msg.topic()} [{msg.partition()}] at offset {msg.offset()}')
+        logger.info(f'Message delivered to {msg.topic()} [{msg.partition()}] at offset {msg.offset()}')
+
+
+logger.info('Сервис запущен и готов к обработке сообщений')
+
 
 @app.post("/orders")
 def create_order(order: dict):
