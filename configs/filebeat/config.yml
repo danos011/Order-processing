@@ -1,24 +1,34 @@
 filebeat.inputs:
+
   - type: filestream
+    id: order_service_input
     enabled: true
     paths:
       - /logs/order_service/*.log
     fields:
       service: order_service
+    prospector.scanner.fingerprint.length: 128
+    prospector.scanner.fingerprint.offset: 0
 
   - type: filestream
+    id: processing_service_input
     enabled: true
     paths:
       - /logs/processing_service/*.log
     fields:
       service: processing_service
+    prospector.scanner.fingerprint.length: 128
+    prospector.scanner.fingerprint.offset: 0
 
   - type: filestream
+    id: notification_service_input
     enabled: true
     paths:
       - /logs/notification_service/*.log
     fields:
       service: notification_service
+    prospector.scanner.fingerprint.length: 128
+    prospector.scanner.fingerprint.offset: 0
 
 output.logstash:
   hosts: [ "logstash:5044" ]
